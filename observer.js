@@ -6,7 +6,7 @@ var Observer = Observer || (function() {
   //                |_|   
 
   /** 
-   * maps: target -> proxy
+   * map: target -> proxy
    **/
   var proxies = new WeakMap();
 
@@ -23,8 +23,9 @@ var Observer = Observer || (function() {
     }
 
     /**
-     * Avoids re-wrapping of proxies/ targets
-     * Avaids double wrapped obejcts (only when unsing transparent proxies)
+     * Avoid re-wrapping of proxies/ targets.
+     * Avaid double wrapped obejcts.
+     * (works only when unsing transparent proxies)
      **/
     if(proxies.has(target)) {
       return proxies.get(target);
@@ -41,22 +42,18 @@ var Observer = Observer || (function() {
     return proxy;
   }
 
-  // ___          _ _          ___                 
-  //| _ \_  _ _ _(_) |_ _  _  | __|_ _ _ _ ___ _ _ 
-  //|  _/ || | '_| |  _| || | | _|| '_| '_/ _ \ '_|
-  //|_|  \_,_|_| |_|\__|\_, | |___|_| |_| \___/_|  
-  //                    |__/                       
+  // __  __           _                      ___                 
+  //|  \/  |___ _ __ | |__ _ _ __ _ _ _  ___| __|_ _ _ _ ___ _ _ 
+  //| |\/| / -_) '  \| '_ \ '_/ _` | ' \/ -_) _|| '_| '_/ _ \ '_|
+  //|_|  |_\___|_|_|_|_.__/_| \__,_|_||_\___|___|_| |_| \___/_|  
 
-  // XXX
   function MembraneError(message) {
-    this.name = 'MembraneError';
-    this.message = message || 'Pure function cannot cause any observable side effects.';
+    this.name = 'Membrane Error';
+    this.message = message || 'Pure function cannot cause observable effects.';
     this.stack = (new Error()).stack;
   }
   MembraneError.prototype = Object.create(Error.prototype);
   MembraneError.prototype.constructor = MembraneError;
-
-  // TODO implement a revokable reference
 
   // __  __           _                      
   //|  \/  |___ _ __ | |__ _ _ __ _ _ _  ___ 
@@ -119,9 +116,9 @@ var Observer = Observer || (function() {
      * A trap for getting property values.
      **/
     this.get = function(target, name, receiver) {
-      if(name === Symbol.toPrimitive) return wrap(origin[name]);
+      if(name === Symbol.toPrimitive) return wrap(target[name]);
 
-      var desc = Object.getOwnPropertyDescriptor(origin, name);
+      var desc = Object.getOwnPropertyDescriptor(target, name);
       if(desc && desc.get) {
         var getter = wrap(desc.get);
         return getter.apply(this);
@@ -196,69 +193,87 @@ var Observer = Observer || (function() {
 
 
 
+  // _  _              _ _         
+  //| || |__ _ _ _  __| | |___ _ _ 
+  //| __ / _` | ' \/ _` | / -_) '_|
+  //|_||_\__,_|_||_\__,_|_\___|_|  
 
-
-
-
-  function Membrane() {
-    if(!(this instanceof Membrane)) return new Membrane();
+  function Handler(handler) {
+    if(!(this instanceof Handler)) return new Handler(handler);
 
     /**
      * A trap for Object.getPrototypeOf.
      **/
     this.getPrototypeOf = function(target) {
-      return wrap(Object.getPrototypeOf(target));
+      throw new Error("Trap not implemented."); // TODO
+      //return wrap(Object.getPrototypeOf(target));
     }
 
     /**
      * A trap for Object.setPrototypeOf.
      **/
     this.setPrototypeOf = function(target, prototype) {
-      throw new MembraneError();
+      throw new Error("Trap not implemented."); // TODO
+      //throw new MembraneError();
     }
 
     /**
      * A trap for Object.isExtensible
      **/
     this.isExtensible = function(target) {
-      return Object.isExtensible(target);
+      throw new Error("Trap not implemented."); // TODO
+      //return Object.isExtensible(target);
     };
 
     /** 
      * A trap for Object.preventExtensions.
      **/
     this.preventExtensions = function(target) {
-      throw new MembraneError();
+      throw new Error("Trap not implemented."); // TODO
+      //throw new MembraneError();
     };
 
     /** 
      * A trap for Object.getOwnPropertyDescriptor.
      **/
     this.getOwnPropertyDescriptor = function(target, name) {
-      return wrap(Object.getOwnPropertyDescriptor(target, name));
+      throw new Error("Trap not implemented."); // TODO
+      //return wrap(Object.getOwnPropertyDescriptor(target, name));
     };
 
     /** 
      * A trap for Object.defineProperty.
      **/
     this.defineProperty = function(target, name, desc) {
-      throw new MembraneError();
+      throw new Error("Trap not implemented."); // TODO
+      //throw new MembraneError();
     };
 
     /** 
      * A trap for the in operator.
      **/
     this.has = function(target, name) {
-      return (name in target);
+      throw new Error("Trap not implemented."); // TODO
+      //return (name in target);
     };
 
     /**
      * A trap for getting property values.
      **/
     this.get = function(target, name, receiver) {
- 
-      // proxy-membrane must allow equal-updates
-      [targeet, name, receiver] = callTrap('preGet', wrap({targeet:targeet, name:name, receiver:receiver}));
+    
+      // get user specific trap
+      var trap = handler.get;
+
+      // call trap to notify the handler 
+      // and to receive the continuation function
+      var continuation = trap.call(this, wrap(target), wrap(name), wrap(receiver));
+
+      // default operation
+      var result = target[name];
+
+      continuation(wrap())
+
 
       /** Begin: default behavior
        **/
@@ -268,112 +283,186 @@ var Observer = Observer || (function() {
 
 
 
--
--      var configuration = new Configation.Get(targeet, name, receiver);
--      
--      if(var trap = 'preGet' in handler) handler[trap](configuration);
--
--
--      Configation.equals(configuration, )
--
--      var {targeet:targeet, name:name, receiver:receiver} = calltrap('get', {targeet:targeet, name:name, receiver:receiver});
--
--      var {return:return} = 
--
--
--      if(('preGet') in handler) {
--        var configuration = {targeet:targeet, name:name, receiver:receiver};
--        var configurationP = handler['preGet'](configuration);
-+      var desc = Object.getOwnPropertyDescriptor(origin, name);
-+      if(desc && desc.get) {
-+        var getter = wrap(desc.get);
-+        return getter.apply(this);
-+      } else {
-+        return wrap(target[name])
-       }
--
--      var 
--
+      -
+        -      var configuration = new Configation.Get(targeet, name, receiver);
+      -      
+        -      if(var trap = 'preGet' in handler) handler[trap](configuration);
+      -
+        -
+        -      Configation.equals(configuration, )
+        -
+        -      var {targeet:targeet, name:name, receiver:receiver} = calltrap('get', {targeet:targeet, name:name, receiver:receiver});
+      -
+        -      var {return:return} = 
+        -
+        -
+        -      if(('preGet') in handler) {
+          -        var configuration = {targeet:targeet, name:name, receiver:receiver};
+          -        var configurationP = handler['preGet'](configuration);
+          +      var desc = Object.getOwnPropertyDescriptor(origin, name);
+          +      if(desc && desc.get) {
+            +        var getter = wrap(desc.get);
+            +        return getter.apply(this);
+            +      } else {
+              +        return wrap(target[name])
+            }
+          -
+            -      var 
+            -
 
-      if()handler
+            if()handler
 
 
-      if(name === Symbol.toPrimitive) return wrap(origin[name]);
+              if(name === Symbol.toPrimitive) return wrap(origin[name]);
 
-      var desc = Object.getOwnPropertyDescriptor(origin, name);
-      if(desc && desc.get) {
-        var getter = wrap(desc.get);
-        return getter.apply(this);
-      } else {
-        return wrap(target[name])
-      }
-    };
+          var desc = Object.getOwnPropertyDescriptor(origin, name);
+          if(desc && desc.get) {
+            var getter = wrap(desc.get);
+            return getter.apply(this);
+          } else {
+            return wrap(target[name])
+          }
+        };
 
-    /** 
-     * A trap for setting property values.
-     **/
-    this.set = function(target, name, value, receiver) {
-      throw new MembraneError();
-    };
+      /** 
+       * A trap for setting property values.
+       **/
+      this.set = function(target, name, value, receiver) {
+        throw new Error("Trap not implemented."); // TODO
+        //throw new MembraneError();
+      };
 
-    /**
-     * A trap for the delete operator.
-     **/
-    this.deleteProperty = function(target, name) {
-      throw new MembraneError();
-    };
+      /**
+       * A trap for the delete operator.
+       **/
+      this.deleteProperty = function(target, name) {
+        throw new Error("Trap not implemented."); // TODO
+        //throw new MembraneError();
+      };
 
-    /** 
-     * A trap for for...in statements.
-     **/
-    this.enumerate = function(target) {
-      var properties = new Set();
-      for(var property in target) {
-        properties.add(property);
-      }
-      return Array.from(properties)[Symbol.iterator]();
-    };
+      /** 
+       * A trap for for...in statements.
+       **/
+      this.enumerate = function(target) {
+        throw new Error("Trap not implemented."); // TODO
+        //var properties = new Set();
+        //for(var property in target) {
+        // properties.add(property);
+        //}
+        //return Array.from(properties)[Symbol.iterator]();
+      };
 
-    /**
-     * A trap for Object.getOwnPropertyNames.
-     **/
-    this.ownKeys = function(target) {
-      return Object.getOwnPropertyNames(target);
-    };
+      /**
+       * A trap for Object.getOwnPropertyNames.
+       **/
+      this.ownKeys = function(target) {
+        throw new Error("Trap not implemented."); // TODO
+        //return Object.getOwnPropertyNames(target);
+      };
 
-    /** 
-     * A trap for a function call.
-     **/
-    this.apply = function(target, thisArg, argumentsList) {
-      if(target instanceof Pure) {
-        return target.apply(wrap(thisArg), wrap(argumentsList))
-      } else {
-        throw new MembraneError();
-      }
-    };
+      /** 
+       * A trap for a function call.
+       **/
+      this.apply = function(target, thisArg, argumentsList) {
+        throw new Error("Trap not implemented."); // TODO
+        //if(target instanceof Pure) {
+        //  return target.apply(wrap(thisArg), wrap(argumentsList))
+        //} else {
+        //  throw new MembraneError();
+        //}
+      };
 
-    /** 
-     * A trap for the new operator. 
-     **/
-    this.construct = function(target, argumentsList) {
-      if(target instanceof Pure) {
-        var thisArg = Object.create(target.prototype);
-        var result = target.apply(wrap(thisArg), wrap(argumentsList));
-        return (result instanceof Object) ? result : wrap(thisArg);
-      } else {
-        throw new MembraneError();
+      /** 
+       * A trap for the new operator. 
+       **/
+      this.construct = function(target, argumentsList) {
+        throw new Error("Trap not implemented."); // TODO
+        //if(target instanceof Pure) {
+        //  var thisArg = Object.create(target.prototype);
+        //  var result = target.apply(wrap(thisArg), wrap(argumentsList));
+        //  return (result instanceof Object) ? result : wrap(thisArg);
+        //} else {
+        //  throw new MembraneError();
+       // }
       }
     }
-  }
 
 
 
 
 
 
+    //  ___  _                            
+    // / _ \| |__ ___ ___ _ ___ _____ _ _ 
+    //| (_) | '_ (_-</ -_) '_\ V / -_) '_|
+    // \___/|_.__/__/\___|_|  \_/\___|_|  
+
+    var observers = new WeakSet()
+
+    function Observer(target, handler, keep=true) {
+
+      var ohandler = new ObserverHandler(handler);
+      var oproxy = new TransparentProxy(target, handler);
+// meta handler
+
+
+ // checks for pure function
+      if(!Pure.isPure(trap)) return new Error("Trap 'get' must be a pure function.");
 
 
 
-  return Pure;
 
-})();
+
+
+      if(keep) observers.add(oproxy);
+
+      return oproxy;
+    }
+    Observer.prototype = {};
+
+    // _       ___ _       _           
+    //| |_ ___/ __| |_ _ _(_)_ _  __ _ 
+    //|  _/ _ \__ \  _| '_| | ' \/ _` |
+    // \__\___/___/\__|_| |_|_||_\__, |
+    //                           |___/ 
+
+    Object.defineProperty(Observer.prototype, "toString", {
+      get: function() {
+        return function() { return "[[Obserber]]"; };
+      }
+    });
+
+    //                _          
+    //__ _____ _ _ __(_)___ _ _  
+    //\ V / -_) '_(_-< / _ \ ' \ 
+    // \_/\___|_| /__/_\___/_||_|
+
+    Object.defineProperty(Observer, "version", {
+      value: "Observer 1.3.3 (PoC)"
+    });
+
+    Object.defineProperty(Observer.prototype, "version", {
+      value: Sandbox.version
+    });
+
+    // _     ___  _                            
+    //(_)___/ _ \| |__ ___ ___ _ ___ _____ _ _ 
+    //| (_-< (_) | '_ (_-</ -_) '_\ V / -_) '_|
+    //|_/__/\___/|_.__/__/\___|_|  \_/\___|_|  
+
+    Object.defineProperty(Observer, "isObserver", {
+      value: function(object) {
+        return observers.has(object);
+      } 
+    });
+
+
+
+    //         _                 
+    // _ _ ___| |_ _  _ _ _ _ _  
+    //| '_/ -_)  _| || | '_| ' \ 
+    //|_| \___|\__|\_,_|_| |_||_|
+
+    return Observer;
+
+  })();
