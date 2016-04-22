@@ -23,31 +23,7 @@ var target = {
   }
 }
 
-
-function TypeNumber() {
-  return 
-
-}
-
-
-
-// wrap procedure will store, remember existing properties
-
-
-var handler = {
-  get: function(target, name, handler) {
-
-    return observe(target[name], this); 
-  }
-}
-
-
-
-
-
-
-
-function wrap(target, handler, realm) {
+function wrap(target) {
 
   if(target !== Object(target)) 
     return target;
@@ -62,29 +38,8 @@ function wrap(target, handler, realm) {
     }
   }
 
-  return new realm.wrap(target, handler);
+  return new Proxy(target, handler);
 }
 
-
- var handler = {
-   get: function(target, name, handler) {
-     if(typeof target[name] !== 'number' && typeof target[name] !== 'object' )
-       throw new Error(`Property ${name} is not a number`);
-
-     return wrap(target[name]); 
-   }
- }
-
-
-
-
-
-
-
-var realm = Observer.createRealm(wrap);
-
-
-
-
-var proxy = realm.Proxy(target);
+var proxy = wrap(target);
 print(proxy.a, proxy.b, proxy.c.a, proxy.c.b, proxy.c.x);
