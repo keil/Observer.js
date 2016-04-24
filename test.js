@@ -23,6 +23,20 @@ var target = {
   }
 }
 
+function wrap(target, handler) {
+  if(target !== Object(target)) 
+    return target;
+
+
+
+}
+
+
+
+var realm = Observer.createRealm(wrap);
+
+
+
 
 function TypeNumber() {
   return 
@@ -35,11 +49,15 @@ function TypeNumber() {
 
 
 var handler = {
-  get: function(target, name, handler) {
-
-    return observe(target[name], this); 
+  get: function(target, name, receiver, observe) {
+    var value = target[name];
+    
+    observe(realm(value), ); // observe retruns a wrapped element of the proxy ?
   }
 }
+
+
+
 
 
 

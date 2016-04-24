@@ -10,10 +10,32 @@ var Observer = Observer || (function() {
    **/
   var proxies = new WeakMap();
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   /** 
-   * wrap: target -> proxy
+   * sandboc: target -> proxy
    **/
-  function wrap(target) {
+  function sandbox(target) {
 
     /**
      * If target is a primitive value, then return target
@@ -31,8 +53,8 @@ var Observer = Observer || (function() {
       return proxies.get(target);
     }
 
-    var handler = new Membrane();
-    var proxy = new TransparentProxy(target, handler);
+    var handler = new Handler();
+    var proxy = new TransparentProxy(target, handler); // TODO, use realm ?
 
     /**
      * Stores the current proxy
@@ -267,12 +289,66 @@ var Observer = Observer || (function() {
 
       // call trap to notify the handler 
       // and to receive the continuation function
-      var continuation = trap.call(this, wrap(target), wrap(name), wrap(receiver));
+      var continuation = trap.call(this, sandbox(target), sandbox(name), sandbox(receiver));
 
       // default operation
       var result = target[name];
 
-      continuation(wrap())
+
+      continuation(wrap(result));
+
+
+
+      // call trap to notify the handler 
+      // and to receive the continuation function
+      var continuation = calltrap(handler.get, [target, name, receiver]);
+
+      // default operation
+      var result = target[name];
+
+
+      var continuation 
+
+        call continuation
+
+
+
+
+      var continuation = calltrap(
+            handler.get,
+            default.get,
+            [target, name, receiver]
+          );
+
+
+
+      function observe(handler) {
+        return wrap(result)
+      }
+
+
+
+      function calltrap(trap, default, args) {
+        // frist trap alaso needs teh warp function wo restrict aruments 
+        //
+
+        var continuation = trap.call(this, ...sandbox(args), realm);
+
+        var result = default.apply(this, sandbox(args));
+        
+        var resultX = continuation(sandbox(result), ret, obs);
+        
+        if()
+
+
+              
+      
+      }
+
+
+
+
+
 
 
       /** Begin: default behavior
