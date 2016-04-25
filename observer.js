@@ -199,10 +199,6 @@ var Observer = Observer || (function() {
   //| |) / -_)  _/ _` | || | |  _|
   //|___/\___|_| \__,_|\_,_|_|\__|
 
-  /**
-   * Create new no-op forwarding handler for default behaviour
-   **/
-  var default = new NoOpHandler();
 
   function NoOpHandler() {
     if(!(this instanceof NoOpHandler)) return new NoOpHandler();
@@ -300,7 +296,7 @@ var Observer = Observer || (function() {
      * A trap for a function call.
      **/
     this.apply = function(target, thisArg, argumentsList) {
-      return target.apply(thisArg, argumentsList))
+      return target.apply(thisArg, argumentsList);
     };
 
     /** 
@@ -339,7 +335,7 @@ var Observer = Observer || (function() {
   //\__\__,_|_|_|\__|_| \__,_| .__/
   //                         |_|   
 
-  function calltrap(trap, default, argumentsList) {
+  function calltrap(trap, defaulttrap, argumentsList) {
 
     /**
      * Trap return.
@@ -364,7 +360,7 @@ var Observer = Observer || (function() {
       // - check if values are identical 
       // (this requires that all transparent proxies are observer)
 
-      result = default.apply(this, argumentsList);
+      result = defaulttrap.apply(this, argumentsList);
 
 
       continuation.call(this, result, function(result) {
@@ -392,7 +388,7 @@ var Observer = Observer || (function() {
      * A trap for getting property values.
      * (Meta-Handler only recognizes get calls for traps.)
      **/ 
-    this.get = function(default, trap, receiver) {
+    this.get = function(noophandler, trap, receiver) {
 
       /** 
        * If the user-defined handler contains a trap-function for operation <trap>,
@@ -402,8 +398,8 @@ var Observer = Observer || (function() {
        * Otherwise, the meta-handler returns the default behaviour.
        **/
       return (trap in handler) ? function () {
-        return calltrap(handler[trap], default[trap], arguments)     
-      } ? default[trap];
+        return calltrap(handler[trap], noophandler[trap], arguments)     
+      } : noophandler[trap];
 
     }
   }
@@ -414,13 +410,9 @@ var Observer = Observer || (function() {
   //|_|  |_\__,_|_\_\___|  \___/|_.__/__/\___|_|  \_/\___|_|  
 
   function mkObserver(realm) {
-
+   
     // cache for remembering observer proxies
-    var observers = new realm.WeakSet();
-
-
-
-
+    var observers = realm.WeakSet();
 
     //  ___  _                            
     // / _ \| |__ ___ ___ _ ___ _____ _ _ 
@@ -433,7 +425,7 @@ var Observer = Observer || (function() {
       var Proxy = realm.Proxy;
 
       // create new observer based on the given  handler
-      var proxy = new Proxy(target, new ObserverHandler(handler));
+      var proxy = new realm.Proxy(target, new realm.Proxy(new NoOpHandler(), new ObserverHandler(handler)));
 
       // remembers existing observers
       if(keep) observers.add(oproxy);
@@ -460,7 +452,7 @@ var Observer = Observer || (function() {
 
         // redefine proxy constructor of new realm
         Object.defineProperty(realm, "Proxy", {
-          value: mkObserver(realm);
+          value: mkObserver(realm)
         });
 
         // return new realm
@@ -484,11 +476,15 @@ var Observer = Observer || (function() {
     //                           |___/ 
 
     Object.defineProperty(Observer, "toString", {
-      value: "[[Obserber Constructor]]"
+      value: function() {
+        return "[[Obserber Constructor]]";
+      }
     });
 
     Object.defineProperty(Observer.prototype, "toString", {
-      value: "[[Observer]]"
+      value: function() { 
+        return "[[Observer]]";
+      }
     });
 
     //                _          
@@ -531,6 +527,3 @@ var Observer = Observer || (function() {
   return mkObserver(TransparentProxy.createRealm());
 
 })();
-
-
-print("Observer", observer);
