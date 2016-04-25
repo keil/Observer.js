@@ -1,4 +1,4 @@
-/*
+/**
  * Observer Proxy 
  * http://proglang.informatik.uni-freiburg.de/proxy/
  *
@@ -11,61 +11,29 @@
  *
  * Author Matthias Keil
  * http://www.informatik.uni-freiburg.de/~keilr/
- */
+ **/
 
+/**
+ * Target Object
+ * a,b,c range over number fields
+ * x,y,z range over object fields
+ *
+ **/
 var target = {
   a: 1,
   b: 2,
-  c: {
+  x: {
     a: 1,
     b: 2,
     c: 3
   }
 }
 
-function wrap(target, handler) {
-  if(target !== Object(target)) 
-    return target;
+print(Observer);
 
+quit();
 
-
-}
-
-
-
-var realm = Observer.createRealm(wrap);
-
-
-
-
-function TypeNumber() {
-  return 
-
-}
-
-
-
-// wrap procedure will store, remember existing properties
-
-
-var handler = {
-  get: function(target, name, receiver, observe) {
-    var value = target[name];
-    
-    observe(realm(value), ); // observe retruns a wrapped element of the proxy ?
-  }
-}
-
-
-
-
-
-
-
-
-
-
-function wrap(target, handler, realm) {
+function wrap(target) {
 
   if(target !== Object(target)) 
     return target;
@@ -73,36 +41,16 @@ function wrap(target, handler, realm) {
   var handler = {
     get: function(target, name, handler) {
       {
-        if(typeof target[name] !== 'number' && typeof target[name] !== 'object' )
-          throw new Error(`Property ${name} is not a number`);
+        if(typeof target[name] !== 'number' && typeof target[name] !== 'object')
+          throw new Error(`Property ${name} is not a number or object`);
       }
       return wrap(target[name]); 
     }
   }
 
-  return new realm.wrap(target, handler);
+  return new Observer(target, handler);
 }
 
+var proxy = wrap(target);
 
- var handler = {
-   get: function(target, name, handler) {
-     if(typeof target[name] !== 'number' && typeof target[name] !== 'object' )
-       throw new Error(`Property ${name} is not a number`);
-
-     return wrap(target[name]); 
-   }
- }
-
-
-
-
-
-
-
-var realm = Observer.createRealm(wrap);
-
-
-
-
-var proxy = realm.Proxy(target);
 print(proxy.a, proxy.b, proxy.c.a, proxy.c.b, proxy.c.x);

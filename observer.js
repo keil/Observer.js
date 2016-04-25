@@ -531,3 +531,6 @@ var Observer = Observer || (function() {
   return mkObserver(TransparentProxy.createRealm());
 
 })();
+
+
+print("Observer", observer);

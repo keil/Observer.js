@@ -1,27 +1,11 @@
-var TransparentProxy = TransparentProxy || Proxy;
-
-if(TransparentProxy === Proxy) {
-  TransparentProxy.createRealm = function() {
-    var cache = new WeakMap();
-
-    return {
-      Proxy: function(target, handler) {
-        var proxy = new Proxy(target, handler);
-        cache.set(proxy, target);
-      },
-
-      equals: function(arg0, arg1) {
-        var var0 = cache.has(arg0) ? cache.get(arg0) : arg0;
-        var var1 = cache.has(arg1) ? cache.get(arg1) : arg1;
-        return var0 === var1;
-      }
-    }
+/**
+ * Make TransparentProxy avaliable in standard engines.
+ **/
+var TransparentProxy = TransparentProxy || (function () {
+  this.TransparentProxy = Proxy;
+  this.TransparentProxy.createRealm = function() {
+    return {Proxy:Proxy, equals: function(arg0, arg1) {
+      return arg0 === arg1;
+    }, WeakMap: WeakMap, WeakSet: WeakSet, Map: Map, Set: Set};
   }
-}
-
-
-// TODO, realm needs weak map and weak set and so on
-
-// TODO
-// Observer needs to ovverride the defualt implementation if Transdparent Proxy
-//
+})(this);
