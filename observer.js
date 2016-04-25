@@ -382,7 +382,8 @@ var Observer = Observer || (function() {
   //|_||_\__,_|_||_\__,_|_\___|_|  
 
 
-  function ObserveHandler(handler) {
+  function ObserverHandler(handler) {
+     if(!(this instanceof ObserverHandler)) return new ObserverHandler(handler);
 
     /**
      * A trap for getting property values.
@@ -428,7 +429,7 @@ var Observer = Observer || (function() {
       var proxy = new realm.Proxy(target, new realm.Proxy(new NoOpHandler(), new ObserverHandler(handler)));
 
       // remembers existing observers
-      if(keep) observers.add(oproxy);
+      if(keep) observers.add(proxy);
 
       // return new observer proxy
       return proxy;

@@ -29,10 +29,6 @@ var target = {
   }
 }
 
-print(Observer);
-
-quit();
-
 function wrap(target) {
 
   if(target !== Object(target)) 
