@@ -18,3 +18,10 @@ if(TransparentProxy === Proxy) {
     }
   }
 }
+
+
+// TODO, realm needs weak map and weak set and so on
+
+// TODO
+// Observer needs to ovverride the defualt implementation if Transdparent Proxy
+//

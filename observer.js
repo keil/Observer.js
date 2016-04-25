@@ -1,5 +1,11 @@
 var Observer = Observer || (function() {
 
+
+
+
+
+
+
   //__ __ ___ _ __ _ _ __ 
   //\ V  V / '_/ _` | '_ \
   // \_/\_/|_| \__,_| .__/
@@ -468,77 +474,131 @@ var Observer = Observer || (function() {
 
 
 
-    //  ___  _                            
-    // / _ \| |__ ___ ___ _ ___ _____ _ _ 
-    //| (_) | '_ (_-</ -_) '_\ V / -_) '_|
-    // \___/|_.__/__/\___|_|  \_/\___|_|  
-
-    var observers = new WeakSet()
-
-    function Observer(target, handler, keep=true) {
-
-      var ohandler = new ObserverHandler(handler);
-      var oproxy = new TransparentProxy(target, handler);
-// meta handler
 
 
- // checks for pure function
-      if(!Pure.isPure(trap)) return new Error("Trap 'get' must be a pure function.");
+
+    // __  __      _          ___  _                            
+    //|  \/  |__ _| |_____   / _ \| |__ ___ ___ _ ___ _____ _ _ 
+    //| |\/| / _` | / / -_) | (_) | '_ (_-</ -_) '_\ V / -_) '_|
+    //|_|  |_\__,_|_\_\___|  \___/|_.__/__/\___|_|  \_/\___|_|  
+
+    function mkObserver(realm) {
+
+      // cache for remembering observer proxies
+      var observers = new realm.WeakSet();
 
 
 
 
 
+      //  ___  _                            
+      // / _ \| |__ ___ ___ _ ___ _____ _ _ 
+      //| (_) | '_ (_-</ -_) '_\ V / -_) '_|
+      // \___/|_.__/__/\___|_|  \_/\___|_|  
 
-      if(keep) observers.add(oproxy);
+      function Observer(target, handler, keep=true) {
 
-      return oproxy;
-    }
-    Observer.prototype = {};
+        // Proxy Constructor
+        var Proxy = realm.Proxy;
 
-    // _       ___ _       _           
-    //| |_ ___/ __| |_ _ _(_)_ _  __ _ 
-    //|  _/ _ \__ \  _| '_| | ' \/ _` |
-    // \__\___/___/\__|_| |_|_||_\__, |
-    //                           |___/ 
+        // create new observer based on the given  handler
+        var proxy = new Proxy(target, new ObserverHandler(handler));
 
-    Object.defineProperty(Observer.prototype, "toString", {
-      get: function() {
-        return function() { return "[[Obserber]]"; };
+        // remembers existing observers
+        if(keep) observers.add(oproxy);
+
+        // return new observer proxy
+        return proxy;
       }
-    });
 
-    //                _          
-    //__ _____ _ _ __(_)___ _ _  
-    //\ V / -_) '_(_-< / _ \ ' \ 
-    // \_/\___|_| /__/_\___/_||_|
+      //                 _       ___          _       
+      // __ _ _ ___ __ _| |_ ___| _ \___ __ _| |_ __  
+      /// _| '_/ -_) _` |  _/ -_)   / -_) _` | | '  \ 
+      //\__|_| \___\__,_|\__\___|_|_\___\__,_|_|_|_|_|
 
-    Object.defineProperty(Observer, "version", {
-      value: "Observer 1.3.3 (PoC)"
-    });
+      Object.defineProperty(Observer.prototype, "createRealm", {
+        get: function() {
 
-    Object.defineProperty(Observer.prototype, "version", {
-      value: Sandbox.version
-    });
+          // create a new indetitity realm
+          var realm = TransparentProxy.createRealm();
 
-    // _     ___  _                            
-    //(_)___/ _ \| |__ ___ ___ _ ___ _____ _ _ 
-    //| (_-< (_) | '_ (_-</ -_) '_\ V / -_) '_|
-    //|_/__/\___/|_.__/__/\___|_|  \_/\___|_|  
+          // redefine toString of new realm
+          Object.defineProperty(realm, "toString", {
+            value: "[[Identitiy Realm]]"
+          });
 
-    Object.defineProperty(Observer, "isObserver", {
-      value: function(object) {
-        return observers.has(object);
-      } 
-    });
+          // redefine proxy constructor of new realm
+          Object.defineProperty(realm, "Proxy", {
+            value: mkObserver(realm);
+          });
+
+          // return new realm
+          return realm;
+        }
+      });
+
+      //                _               _           
+      // __ ___ _ _  __| |_ _ _ _  _ __| |_ ___ _ _ 
+      /// _/ _ \ ' \(_-<  _| '_| || / _|  _/ _ \ '_|
+      //\__\___/_||_/__/\__|_|  \_,_\__|\__\___/_|  
+
+      Object.defineProperty(Observer.prototype, "constructor", {
+        value: Observer
+      });
+
+      // _       ___ _       _           
+      //| |_ ___/ __| |_ _ _(_)_ _  __ _ 
+      //|  _/ _ \__ \  _| '_| | ' \/ _` |
+      // \__\___/___/\__|_| |_|_||_\__, |
+      //                           |___/ 
+
+      Object.defineProperty(Observer, "toString", {
+        value: "[[Obserber Constructor]]"
+      });
+
+      Object.defineProperty(Observer.prototype, "toString", {
+        value: "[[Observer]]"
+      });
+
+      //                _          
+      //__ _____ _ _ __(_)___ _ _  
+      //\ V / -_) '_(_-< / _ \ ' \ 
+      // \_/\___|_| /__/_\___/_||_|
+
+      Object.defineProperty(Observer, "version", {
+        value: "Observer 0.1.0 (PoC)"
+      });
+
+      Object.defineProperty(Observer.prototype, "version", {
+        value: Observer.version
+      });
+
+      // _     ___  _                            
+      //(_)___/ _ \| |__ ___ ___ _ ___ _____ _ _ 
+      //| (_-< (_) | '_ (_-</ -_) '_\ V / -_) '_|
+      //|_/__/\___/|_.__/__/\___|_|  \_/\___|_|  
+
+      Object.defineProperty(Observer, "isObserver", {
+        value: function(object) {
+          return observers.has(object);
+        } 
+      });
+
+      //         _                 
+      // _ _ ___| |_ _  _ _ _ _ _  
+      //| '_/ -_)  _| || | '_| ' \ 
+      //|_| \___|\__|\_,_|_| |_||_|
+
+      return Observer;
 
 
+    }
 
     //         _                 
     // _ _ ___| |_ _  _ _ _ _ _  
     //| '_/ -_)  _| || | '_| ' \ 
     //|_| \___|\__|\_,_|_| |_||_|
 
-    return Observer;
+    return mkObserver(TransparentProxy.createRealm());
 
   })();
