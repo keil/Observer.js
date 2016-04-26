@@ -194,7 +194,8 @@ var Observer = Observer || (function() {
       if(target instanceof Pure) {
         return target.apply(sandbox_wrap(thisArg), sandbox_wrap(argumentsList));
       } else {
-        throw new MembraneError('apply');
+        return target.apply(thisArg, argumentsList); // TODO
+        //throw new MembraneError('apply');
       }
     };
 
@@ -360,7 +361,7 @@ var Observer = Observer || (function() {
   //\__\__,_|_|_|\__|_| \__,_| .__/
   //                         |_|   
 
-  function calltrap(trap, defaulttrap, argumentsList) {
+  function calltrap(trap, defaulttrap, thisArg, argumentsList) {
 
     /**
      * Trap return.
@@ -368,7 +369,7 @@ var Observer = Observer || (function() {
      **/
     var trap_return = undefined;
 
-    trap.call(this, ...sandbox_wrap(argumentsList), function(...args) {
+    trap.call(sandbox_wrap(thisArg), ...sandbox_wrap(argumentsList), function(...args) {
 
       /**
        * Extract continuation.
@@ -391,8 +392,8 @@ var Observer = Observer || (function() {
          * The user-defined trap needs to return an values identical to the 
          * default values, i.e. either the same value or an observer of that value.
          **/
-        if(arg === argumentsList[i]) argumentsList[i] = arg;
-        else throw new ObserverError("Argument values must be identical to the default arguments."); 
+         if(arg === argumentsList[i]) argumentsList[i] = arg;
+         else throw new ObserverError("Argument values must be equal to the default arguments.");
       }
 
       /**
@@ -418,7 +419,7 @@ var Observer = Observer || (function() {
          * default return, i.e. either the same value or an observer of that value.
          **/
         if(trap_return === user_return) trap_return = user_return;
-        else throw new ObserverError("Return values must be identical to the default return."); 
+        else throw new ObserverError("Return values must be equal to the default return."); 
 
       });
     });
@@ -427,6 +428,7 @@ var Observer = Observer || (function() {
     /**
      *
      **/
+    print("return", trap_return, Observer.isObserver(trap_return));
     return trap_return;
 
   }
@@ -454,7 +456,7 @@ var Observer = Observer || (function() {
        * Otherwise, the meta-handler returns the default behaviour.
        **/
       return (trap in handler) ? function () {
-        return calltrap(handler[trap], noophandler[trap], Array.from(arguments))
+        return calltrap(handler[trap], noophandler[trap], this, Array.from(arguments))
       } : noophandler[trap];
 
     }
@@ -480,7 +482,8 @@ var Observer = Observer || (function() {
 
 
       if(proxies.has(target)) {
-        return sandbox_wrap(new Observer(proxies.get(target), handler, keep=true));
+        print("cache has");
+        return sandbox_wrap(new Observer(proxies.get(target), handler, keep));
       }
 
       // Proxy Constructor
