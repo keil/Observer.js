@@ -52,7 +52,7 @@ function wrap(target) {
     return target;
 
   var handler = {
-    get: function(target, name, handler, continuation) {
+    get: function(target, name, handler, callback) {
 
       /**
        * Checks for non existing properties.
@@ -64,7 +64,7 @@ function wrap(target) {
       /**
        * Continue observation
        **/
-      continuation(function(result, ret) {
+      callback(function(result, ret) {
 
       /**
        * Checks if the value field is of type number.
@@ -83,6 +83,8 @@ function wrap(target) {
 }
 
 var proxy = wrap(target);
+
+proxy.left.value = 4711;
 
 print(proxy.value);
 

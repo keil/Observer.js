@@ -8,7 +8,11 @@ var Observer = Observer || (function() {
   //|_____/ \__,_|_| |_|\__,_|_.__/ \___/_/\_\
 
   /** 
-   * proxies: target -> proxy
+   * targets: target -> proxy
+   **/
+  var targets = new WeakMap();
+  /** 
+   * proxies: proxy -> target
    **/
   var proxies = new WeakMap();
 
@@ -28,8 +32,8 @@ var Observer = Observer || (function() {
      * Avoid re-wrapping of proxies/ targets.
      * (works only when unsing transparent proxies)
      **/
-    if(proxies.has(target)) {
-      return proxies.get(target);
+    if(targets.has(target)) {
+      return targets.get(target);
     }
 
     /**
@@ -40,7 +44,8 @@ var Observer = Observer || (function() {
     /**
      * Stores the current proxy
      **/
-    proxies.set(target, proxy);
+    targets.set(target, proxy);
+    proxies.set(proxy, target);
 
     return proxy;
   }
@@ -50,9 +55,9 @@ var Observer = Observer || (function() {
   //| |\/| / -_) '  \| '_ \ '_/ _` | ' \/ -_) _|| '_| '_/ _ \ '_|
   //|_|  |_\___|_|_|_|_.__/_| \__,_|_||_\___|___|_| |_| \___/_|  
 
-  function MembraneError(message) {
+  function MembraneError(trap="(unnamed)", message) {
     this.name = 'Membrane Error';
-    this.message = message || 'Pure trap-function cannot cause observable effects.';
+    this.message = message || `Pure trap-function ${trap} cannot cause observable effects.`;
     this.stack = (new Error()).stack;
   }
   MembraneError.prototype = Object.create(Error.prototype);
@@ -77,7 +82,7 @@ var Observer = Observer || (function() {
      * A trap for Object.setPrototypeOf.
      **/
     this.setPrototypeOf = function(target, prototype) {
-      throw new MembraneError();
+      throw new MembraneError('setPrototypeOf');
     }
 
     /**
@@ -91,7 +96,7 @@ var Observer = Observer || (function() {
      * A trap for Object.preventExtensions.
      **/
     this.preventExtensions = function(target) {
-      throw new MembraneError();
+      throw new MembraneError('preventExtensions');
     };
 
     /** 
@@ -105,7 +110,7 @@ var Observer = Observer || (function() {
      * A trap for Object.defineProperty.
      **/
     this.defineProperty = function(target, name, desc) {
-      throw new MembraneError();
+      throw new MembraneError('defineProperty');
     };
 
     /** 
@@ -119,14 +124,15 @@ var Observer = Observer || (function() {
      * A trap for getting property values.
      **/
     this.get = function(target, name, receiver) {
-      if(name === Symbol.toPrimitive) return wrap(target[name]);
+      if(name === Symbol.toPrimitive) return sandbox(target[name]);
+      if(name === Symbol.iterator) return target[name];
 
       var desc = Object.getOwnPropertyDescriptor(target, name);
       if(desc && desc.get) {
-        var getter = wrap(desc.get);
+        var getter = sandbox(desc.get);
         return getter.apply(this);
       } else {
-        return sandbox(target[name])
+        return sandbox(target[name]);
       }
     };
 
@@ -134,14 +140,14 @@ var Observer = Observer || (function() {
      * A trap for setting property values.
      **/
     this.set = function(target, name, value, receiver) {
-      throw new MembraneError();
+      throw new MembraneError('set');
     };
 
     /**
      * A trap for the delete operator.
      **/
     this.deleteProperty = function(target, name) {
-      throw new MembraneError();
+      throw new MembraneError('deleteProperty');
     };
 
     /** 
@@ -169,7 +175,7 @@ var Observer = Observer || (function() {
       if(target instanceof Pure) {
         return target.apply(sandbox(thisArg), sandbox(argumentsList))
       } else {
-        throw new MembraneError();
+        throw new MembraneError('apply');
       }
     };
 
@@ -182,7 +188,7 @@ var Observer = Observer || (function() {
         var result = target.apply(sandbox(thisArg), sandbox(argumentsList));
         return (result instanceof Object) ? result : sandbox(thisArg);
       } else {
-        throw new MembraneError();
+        throw new MembraneError('construct');
       }
     }
   }
@@ -344,7 +350,7 @@ var Observer = Observer || (function() {
     var trap_return = undefined;
 
     // TODO
-    trap.call(this, ...argumentsList, function(continuation, ...argumentsList) {
+    trap.call(this, ...sandbox(argumentsList), function(continuation, ...argumentsList) {
 
       /**
        * Checks if arguments are identical.
@@ -424,6 +430,12 @@ var Observer = Observer || (function() {
     // \___/|_.__/__/\___|_|  \_/\___|_|  
 
     function Observer(target, handler, keep=true) {
+      if(!(this instanceof Observer)) return new Observer(target, handler, keep);
+
+
+      if(proxies.has(target)) {
+        return sandbox(new Observer(proxies.get(target), handler, keep=true));
+      }
 
       // Proxy Constructor
       var Proxy = realm.Proxy;
