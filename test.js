@@ -59,6 +59,7 @@ function wrap(target) {
        * (Pre-operation check)
        **/
       print("@access propert", name, "on", target, "results in", target[name]);
+      
       if(target[name] === undefined)
         throw new Error(`Access to undefined proeprty ${name}.`);
 
@@ -72,9 +73,13 @@ function wrap(target) {
          * (Post-operation check)
          **/
         if(name === 'value' && (typeof result) !== 'number') throw new Error(`Property ${name} is not a number.`);
-        
+       
+        var proxy = wrap(result);
+
+        //print(proxy)
         
         callback(wrap(result));
+
 
       });
     }
@@ -98,8 +103,17 @@ var proxy = wrap(target);
 //print(proxy.right.value);
 
 //print(proxy.xxx);
-print(proxy.right.xxx);
-print(Observer.isObserver(proxy.right));
+
+var p = proxy.right;
+p.adsfasdf= afafr;
+
+print("xxx" in p);
+print(Observer.isObserver(p));
+//print("is observer:", Observer.isObserver(proxy.right));
+//print(proxy.right.xxx);
+
+//print(proxy.right.xxx);
+
 
 //print(proxy.right.left);
 //print(proxy.right.right.value);

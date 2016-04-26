@@ -35,11 +35,13 @@ var Observer = Observer || (function() {
       /**
        * if target is already wrapped in an proxy
        **/
+      print("================>", "targets has ", target);
       return targets.get(target);
     } else if(proxies.has(target)) {
       /**
        * if target is already an proxy
        **/
+      print("================>", "proxies has ", target);
       return target;
     }
 
@@ -282,6 +284,7 @@ var Observer = Observer || (function() {
      * A trap for getting property values.
      **/
     this.get = function(target, name, receiver) {
+      print("*** acccess proeprty ", name); // TODO
       return (target[name]);
 
     };
@@ -361,7 +364,7 @@ var Observer = Observer || (function() {
   //\__\__,_|_|_|\__|_| \__,_| .__/
   //                         |_|   
 
-  function calltrap(trap, defaulttrap, thisArg, argumentsList) {
+  function calltrap(trap, defaulttrap, argumentsList) {
 
     /**
      * Trap return.
@@ -369,7 +372,8 @@ var Observer = Observer || (function() {
      **/
     var trap_return = undefined;
 
-    trap.call(sandbox_wrap(thisArg), ...sandbox_wrap(argumentsList), function(...args) {
+    // TODO. this pointer
+    trap.call(sandbox_wrap({}), ...sandbox_wrap(argumentsList), function(...args) {
 
       /**
        * Extract continuation.
@@ -399,12 +403,12 @@ var Observer = Observer || (function() {
       /**
        * Calls the default operation.
        **/
-      trap_return = defaulttrap.apply(this, argumentsList);
+      trap_return = defaulttrap.apply({}, argumentsList);
 
       /**
        * Continues the user-defined trap.
        **/
-      continuation.call(this, sandbox_wrap(trap_return), function(result) {
+      continuation.call({}, sandbox_wrap(trap_return), function(result) {
 
         /**
          * Unwrap the user's return value.
@@ -428,8 +432,7 @@ var Observer = Observer || (function() {
     /**
      *
      **/
-    print("return", trap_return, Observer.isObserver(trap_return));
-    return trap_return;
+    return wrap(trap_return);
 
   }
 
@@ -446,7 +449,9 @@ var Observer = Observer || (function() {
      * A trap for getting property values.
      * (Meta-Handler only recognizes get calls for traps.)
      **/ 
-    this.get = function(noophandler, trap, receiver) {
+    this.get = function(noophandler, trapname, receiver) {
+
+      print("@ request trap", trapname);
 
       /** 
        * If the user-defined handler contains a trap-function for operation <trap>,
@@ -455,9 +460,9 @@ var Observer = Observer || (function() {
        * 
        * Otherwise, the meta-handler returns the default behaviour.
        **/
-      return (trap in handler) ? function () {
-        return calltrap(handler[trap], noophandler[trap], this, Array.from(arguments))
-      } : noophandler[trap];
+      return (trapname in handler) ? function () {
+        return calltrap(handler[trapname], noophandler[trapname], Array.from(arguments))
+      } : noophandler[trapname];
 
     }
   }
@@ -480,8 +485,11 @@ var Observer = Observer || (function() {
     function Observer(target, handler, keep=true) {
       if(!(this instanceof Observer)) return new Observer(target, handler, keep);
 
+      print("***", "create observer for", target);
 
       if(proxies.has(target)) {
+        print("***", "observe sandboxed target", target);
+
         print("cache has");
         return sandbox_wrap(new Observer(proxies.get(target), handler, keep));
       }
@@ -490,7 +498,17 @@ var Observer = Observer || (function() {
       var Proxy = realm.Proxy;
 
       // create new observer based on the given  handler
-      var proxy = new realm.Proxy(target, new realm.Proxy(new NoOpHandler(), new ObserverHandler(handler)));
+      var proxy = new Proxy(target, new Proxy(new NoOpHandler(), new ObserverHandler(handler)));
+
+      /*var proxy = new Proxy(target, new Proxy(new NoOpHandler(), {
+        get: function(target, name) {
+          print("access trap", name);
+          return target[name];
+        }
+      }));*/
+
+      print(proxy);
+
 
       // remembers existing observers
       if(keep) observers.add(proxy);
