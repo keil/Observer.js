@@ -49,4 +49,5 @@ function wrap(target) {
 
 var proxy = wrap(target);
 
-print(proxy.a, proxy.b, proxy.c.a, proxy.c.b, proxy.c.x);
+print(proxy.x);
+print(proxy.a, proxy.b, proxy.x.a, proxy.x.b, proxy.x.c);

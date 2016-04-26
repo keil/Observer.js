@@ -343,7 +343,8 @@ var Observer = Observer || (function() {
      **/
     var result = undefined;
 
-    trap.call(this, ...sandbox(argumentsList), function(continuation, ...argumentsList) {
+    // TODO
+    trap.call(this, ...argumentsList, function(continuation, ...argumentsList) {
 
       /**
        * Checks if arguments are identical.
@@ -399,7 +400,7 @@ var Observer = Observer || (function() {
        * Otherwise, the meta-handler returns the default behaviour.
        **/
       return (trap in handler) ? function () {
-        return calltrap(handler[trap], noophandler[trap], arguments)     
+        return calltrap(handler[trap], noophandler[trap], Array.slice(arguments)) // TODO, test
       } : noophandler[trap];
 
     }
