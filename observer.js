@@ -37,7 +37,7 @@ var Observer = Observer || (function() {
     }
 
     /**
-     * Creatw new sandbox proxy
+     * Create new sandbox proxy
      **/
     var proxy = new TransparentProxy(target, new Membrane());
 
@@ -49,6 +49,10 @@ var Observer = Observer || (function() {
 
     return proxy;
   }
+
+  
+
+
 
   // __  __           _                      ___                 
   //|  \/  |___ _ __ | |__ _ _ __ _ _ _  ___| __|_ _ _ _ ___ _ _ 
@@ -434,6 +438,7 @@ var Observer = Observer || (function() {
 
 
       if(proxies.has(target)) {
+        /* XXX */ print("re-wrap sandboxed proxy");
         return sandbox(new Observer(proxies.get(target), handler, keep=true));
       }
 
