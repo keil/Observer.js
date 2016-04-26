@@ -76,7 +76,7 @@ var Observer = Observer || (function() {
 
   function MembraneError(trap="(unnamed)", message) {
     this.name = 'Membrane Error';
-    this.message = message || `Pure trap-function ${trap} cannot cause observable effects.`;
+    this.message = `Pure trap-function ${trap} cannot cause observable effects.` + + (message? '\n'+message: '');;
     this.stack = (new Error()).stack;
   }
   MembraneError.prototype = Object.create(Error.prototype);
@@ -348,7 +348,7 @@ var Observer = Observer || (function() {
 
   function ObserverError(message) {
     this.name = 'Obsever Error';
-    this.message = message || 'Observer constraint violation.';
+    this.message = 'Observer constraint violation.' + (message? '\n'+message: '');
     this.stack = (new Error()).stack;
   }
   ObserverError.prototype = Object.create(Error.prototype);
@@ -392,7 +392,7 @@ var Observer = Observer || (function() {
          * default values, i.e. either the same value or an observer of that value.
          **/
         if(arg === argumentsList[i]) argumentsList[i] = arg;
-        else throw new ObserverError(); 
+        else throw new ObserverError("Argument values must be identical to the default arguments."); 
       }
 
       /**
@@ -418,7 +418,7 @@ var Observer = Observer || (function() {
          * default return, i.e. either the same value or an observer of that value.
          **/
         if(trap_return === user_return) trap_return = user_return;
-        else throw new ObserverError(); 
+        else throw new ObserverError("Return values must be identical to the default return."); 
 
       });
     });
@@ -555,7 +555,7 @@ var Observer = Observer || (function() {
     // \_/\___|_| /__/_\___/_||_|
 
     Object.defineProperty(Observer, "version", {
-      value: "Observer 0.1.0 (PoC)"
+      value: "Observer 0.1.1 (PoC)"
     });
 
     Object.defineProperty(Observer.prototype, "version", {
