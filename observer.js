@@ -75,7 +75,7 @@ var Observer = Observer || (function() {
     return sandbox_wrap(target);
   }
 
-  
+
 
 
 
@@ -372,14 +372,13 @@ var Observer = Observer || (function() {
   //                         |_|   
 
   function calltrap(trap, defaulttrap, argumentsList) {
-    
+
     /**
      * Trap return.
      * (Default return is undefined.)
      **/
     var trap_return = undefined;
 
-    // TODO
     trap.call(this, ...sandbox_wrap(argumentsList), function(...args) {
 
       /**
@@ -393,39 +392,19 @@ var Observer = Observer || (function() {
       /**
        * Unwrap the arguments.
        **/
-      //var argumentsList = []; TODO
       for(var i in args) {
-        print("i is", i);
         var arg = sandbox_unwrap(args[i]);
-        
-        //print("LLLLLLLLL" ,arg, "----", argumentsList[i]);
 
-        if(arg !== argumentsList[i]) print("NOT CORRECT")
-    //{
-       //   argumentsList[i] = arg;
-        //} else {
-        //  throw new ObserverError(); 
-       // }
-
-//        argumentsList[i] = sandbox_unwrap(args[i]);
+        /**
+         * Checks if the user arguments are identical to the default arguments.
+         * (This only works with transparent proxies.)
+         *
+         * The user-defined trap needs to return an values identical to the 
+         * default values, i.e. either the same value or an observer of that value.
+         **/
+        if(arg === argumentsList[i]) argumentsList[i] = arg;
+        else throw new ObserverError(); 
       }
-
-
-      /**
-       * Checks if arguments are identical.
-       * TODO, is this correct or do we need a new structural equality test 
-       * as the arguments, list may be a new array. 
-       **/
-      //for(var i in argumentsListX) {
-      //  if(argumentsListX[i] === argumentsList) continue;
-      //  else throw new ObserverError();
-      //}
-
-      // TODO
-      // - unwrap arguments/ deactivate membrane
-      // - check if values are identical 
-      // (this requires that all transparent proxies are observer)
-
 
       /**
        * Calls the default operation.
@@ -436,12 +415,12 @@ var Observer = Observer || (function() {
        * Continues the user-defined trap.
        **/
       continuation.call(this, sandbox_wrap(trap_return), function(result) {
-        
+
         /**
          * Unwrap the user's return value.
          **/
         var user_return = sandbox_unwrap(result);
-        
+
         /**
          * Checks if the user return is identical to the default return.
          * (This only works with transparent proxies.)
@@ -449,11 +428,8 @@ var Observer = Observer || (function() {
          * The user-defined trap needs to return an value identical to the 
          * default return, i.e. either the same value or an observer of that value.
          **/
-        if(trap_return === user_return) {
-          trap_return = user_return;
-        } else {
-          throw new ObserverError(); 
-        }
+        if(trap_return === user_return) trap_return = user_return;
+        else throw new ObserverError(); 
 
       });
     });
@@ -473,7 +449,7 @@ var Observer = Observer || (function() {
 
 
   function ObserverHandler(handler) {
-     if(!(this instanceof ObserverHandler)) return new ObserverHandler(handler);
+    if(!(this instanceof ObserverHandler)) return new ObserverHandler(handler);
 
     /**
      * A trap for getting property values.
@@ -501,7 +477,7 @@ var Observer = Observer || (function() {
   //|_|  |_\__,_|_\_\___|  \___/|_.__/__/\___|_|  \_/\___|_|  
 
   function mkObserver(realm) {
-   
+
     // cache for remembering observer proxies
     var observers = realm.WeakSet();
 
@@ -623,15 +599,15 @@ var Observer = Observer || (function() {
   //|_| \___|\__|\_,_|_| |_||_|
 
   /*
-  return (function() {
-    // create new global Observer proxy
-    var Observer = mkObserver(TransparentProxy.createRealm());
-    
-    // override transparent proxy constructor with Observer
-    TransparentProxy = Observer;
+     return (function() {
+  // create new global Observer proxy
+  var Observer = mkObserver(TransparentProxy.createRealm());
 
-    // return Observer
-    return Observer; 
+  // override transparent proxy constructor with Observer
+  TransparentProxy = Observer;
+
+  // return Observer
+  return Observer; 
   })();*/
 
   // XXX
