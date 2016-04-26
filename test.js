@@ -86,7 +86,7 @@ var proxy = wrap(target);
 
 proxy.left.value = 4711;
 
-//print(proxy.value);
+print(proxy.value);
 
 print(proxy.left.value);
 //print(proxy.left.left.value);

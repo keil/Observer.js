@@ -32,10 +32,14 @@ var Observer = Observer || (function() {
      * Avoid re-wrapping of proxies/ targets.
      **/
     if(targets.has(target)) {
-      // target is already wrapped in an proxy
+      /**
+       * if target is already wrapped in an proxy
+       **/
       return targets.get(target);
     } else if(proxies.has(target)) {
-      // target is already an proxy
+      /**
+       * if target is already an proxy
+       **/
       return target;
     }
 
@@ -43,7 +47,6 @@ var Observer = Observer || (function() {
      * Create new sandbox proxy
      **/
     var proxy = new Proxy(target, new Membrane());
-    //var proxy = new TransparentProxy(target, new Membrane()); // TODO
 
     /**
      * Stores the current proxy
@@ -54,30 +57,17 @@ var Observer = Observer || (function() {
     return proxy;
   }
 
-
   /** 
    * sandbox_wrap: proxy -> target
    **/
   function sandbox_unwrap(proxy) {
 
     if(proxies.has(proxy)) {
-      /* XXX */ print("cache hit");
       return proxies.get(proxy);
     } else {
-      /* XXX */ print("cache miss", typeof proxy);
       return proxy;
     }
   }
-
-
-  // TODO, deprecated
-  function sandbox(target) {
-    return sandbox_wrap(target);
-  }
-
-
-
-
 
   // __  __           _                      ___                 
   //|  \/  |___ _ __ | |__ _ _ __ _ _ _  ___| __|_ _ _ _ ___ _ _ 
@@ -104,7 +94,7 @@ var Observer = Observer || (function() {
      * A trap for Object.getPrototypeOf.
      **/
     this.getPrototypeOf = function(target) {
-      return sandbox(Object.getPrototypeOf(target));
+      return sandbox_wrap(Object.getPrototypeOf(target));
     }
 
     /**
@@ -132,7 +122,7 @@ var Observer = Observer || (function() {
      * A trap for Object.getOwnPropertyDescriptor.
      **/
     this.getOwnPropertyDescriptor = function(target, name) {
-      return sandbox(Object.getOwnPropertyDescriptor(target, name));
+      return sandbox_wrap(Object.getOwnPropertyDescriptor(target, name));
     };
 
     /** 
@@ -153,15 +143,15 @@ var Observer = Observer || (function() {
      * A trap for getting property values.
      **/
     this.get = function(target, name, receiver) {
-      if(name === Symbol.toPrimitive) return sandbox(target[name]);
+      if(name === Symbol.toPrimitive) return sandbox_wrap(target[name]);
       if(name === Symbol.iterator) return target[name];
 
       var desc = Object.getOwnPropertyDescriptor(target, name);
       if(desc && desc.get) {
-        var getter = sandbox(desc.get);
+        var getter = sandbox_wrap(desc.get);
         return getter.apply(this);
       } else {
-        return sandbox(target[name]);
+        return sandbox_wrap(target[name]);
       }
     };
 
@@ -202,10 +192,9 @@ var Observer = Observer || (function() {
      **/
     this.apply = function(target, thisArg, argumentsList) {
       if(target instanceof Pure) {
-        return target.apply(sandbox(thisArg), sandbox(argumentsList));
+        return target.apply(sandbox_wrap(thisArg), sandbox_wrap(argumentsList));
       } else {
-        return target.apply(thisArg, argumentsList); // TODO
-        //throw new MembraneError('apply');
+        throw new MembraneError('apply');
       }
     };
 
@@ -215,8 +204,8 @@ var Observer = Observer || (function() {
     this.construct = function(target, argumentsList) {
       if(target instanceof Pure) {
         var thisArg = Object.create(target.prototype);
-        var result = target.apply(sandbox(thisArg), sandbox(argumentsList));
-        return (result instanceof Object) ? result : sandbox(thisArg);
+        var result = target.apply(sandbox_wrap(thisArg), sandbox_wrap(argumentsList));
+        return (result instanceof Object) ? result : sandbox_wrap(thisArg);
       } else {
         throw new MembraneError('construct');
       }
@@ -465,7 +454,7 @@ var Observer = Observer || (function() {
        * Otherwise, the meta-handler returns the default behaviour.
        **/
       return (trap in handler) ? function () {
-        return calltrap(handler[trap], noophandler[trap], Array.from(arguments)) // TODO, test
+        return calltrap(handler[trap], noophandler[trap], Array.from(arguments))
       } : noophandler[trap];
 
     }
@@ -491,8 +480,7 @@ var Observer = Observer || (function() {
 
 
       if(proxies.has(target)) {
-        /* XXX */ print("re-wrap sandboxed proxy");
-        return sandbox(new Observer(proxies.get(target), handler, keep=true));
+        return sandbox_wrap(new Observer(proxies.get(target), handler, keep=true));
       }
 
       // Proxy Constructor
