@@ -61,8 +61,10 @@ var Observer = Observer || (function() {
   function sandbox_unwrap(proxy) {
 
     if(proxies.has(proxy)) {
+      /* XXX */ print("cache hit");
       return proxies.get(proxy);
     } else {
+      /* XXX */ print("cache miss", typeof proxy);
       return proxy;
     }
   }
@@ -200,9 +202,10 @@ var Observer = Observer || (function() {
      **/
     this.apply = function(target, thisArg, argumentsList) {
       if(target instanceof Pure) {
-        return target.apply(sandbox(thisArg), sandbox(argumentsList))
+        return target.apply(sandbox(thisArg), sandbox(argumentsList));
       } else {
-        throw new MembraneError('apply');
+        return target.apply(thisArg, argumentsList); // TODO
+        //throw new MembraneError('apply');
       }
     };
 
@@ -369,7 +372,7 @@ var Observer = Observer || (function() {
   //                         |_|   
 
   function calltrap(trap, defaulttrap, argumentsList) {
-
+    
     /**
      * Trap return.
      * (Default return is undefined.)
@@ -392,13 +395,17 @@ var Observer = Observer || (function() {
        **/
       //var argumentsList = []; TODO
       for(var i in args) {
+        print("i is", i);
         var arg = sandbox_unwrap(args[i]);
+        
+        //print("LLLLLLLLL" ,arg, "----", argumentsList[i]);
 
-        if(arg === argumentsList[i]) {
-          argumentsList[i] = arg;
-        } else {
-          throw new ObserverError(); 
-        }
+        if(arg !== argumentsList[i]) print("NOT CORRECT")
+    //{
+       //   argumentsList[i] = arg;
+        //} else {
+        //  throw new ObserverError(); 
+       // }
 
 //        argumentsList[i] = sandbox_unwrap(args[i]);
       }
@@ -419,13 +426,35 @@ var Observer = Observer || (function() {
       // - check if values are identical 
       // (this requires that all transparent proxies are observer)
 
-      result = defaulttrap.apply(this, argumentsList);
 
+      /**
+       * Calls the default operation.
+       **/
+      trap_return = defaulttrap.apply(this, argumentsList);
 
-      continuation.call(this, result, function(result) {
-        /* XXX */ // print("@return");
+      /**
+       * Continues the user-defined trap.
+       **/
+      continuation.call(this, sandbox_wrap(trap_return), function(result) {
+        
+        /**
+         * Unwrap the user's return value.
+         **/
+        var user_return = sandbox_unwrap(result);
+        
+        /**
+         * Checks if the user return is identical to the default return.
+         * (This only works with transparent proxies.)
+         *
+         * The user-defined trap needs to return an value identical to the 
+         * default return, i.e. either the same value or an observer of that value.
+         **/
+        if(trap_return === user_return) {
+          trap_return = user_return;
+        } else {
+          throw new ObserverError(); 
+        }
 
-        trap_return = result;
       });
     });
 
