@@ -17,9 +17,9 @@ var Observer = Observer || (function() {
   var proxies = new WeakMap();
 
   /** 
-   * sandbox: target -> proxy
+   * sandbox_wrap: target -> proxy
    **/
-  function sandbox(target) {
+  function sandbox_wrap(target) {
 
     /**
      * If target is a primitive value, then return target
@@ -30,16 +30,20 @@ var Observer = Observer || (function() {
 
     /**
      * Avoid re-wrapping of proxies/ targets.
-     * (works only when unsing transparent proxies)
      **/
     if(targets.has(target)) {
+      // target is already wrapped in an proxy
       return targets.get(target);
+    } else if(proxies.has(target)) {
+      // target is already an proxy
+      return target;
     }
 
     /**
      * Create new sandbox proxy
      **/
-    var proxy = new TransparentProxy(target, new Membrane());
+    var proxy = new Proxy(target, new Membrane());
+    //var proxy = new TransparentProxy(target, new Membrane()); // TODO
 
     /**
      * Stores the current proxy
@@ -48,6 +52,25 @@ var Observer = Observer || (function() {
     proxies.set(proxy, target);
 
     return proxy;
+  }
+
+
+  /** 
+   * sandbox_wrap: proxy -> target
+   **/
+  function sandbox_unwrap(proxy) {
+
+    if(proxies.has(proxy)) {
+      return proxies.get(proxy);
+    } else {
+      return proxy;
+    }
+  }
+
+
+  // TODO, deprecated
+  function sandbox(target) {
+    return sandbox_wrap(target);
   }
 
   
@@ -354,7 +377,32 @@ var Observer = Observer || (function() {
     var trap_return = undefined;
 
     // TODO
-    trap.call(this, ...sandbox(argumentsList), function(continuation, ...argumentsList) {
+    trap.call(this, ...sandbox_wrap(argumentsList), function(...args) {
+
+      /**
+       * Extract continuation.
+       * (Continuation needs to be the last argument.)
+       **/
+      var continuation = args.pop();
+
+      if((typeof continuation) !== 'function') throw new TypeError();
+
+      /**
+       * Unwrap the arguments.
+       **/
+      //var argumentsList = []; TODO
+      for(var i in args) {
+        var arg = sandbox_unwrap(args[i]);
+
+        if(arg === argumentsList[i]) {
+          argumentsList[i] = arg;
+        } else {
+          throw new ObserverError(); 
+        }
+
+//        argumentsList[i] = sandbox_unwrap(args[i]);
+      }
+
 
       /**
        * Checks if arguments are identical.
@@ -412,7 +460,7 @@ var Observer = Observer || (function() {
        * Otherwise, the meta-handler returns the default behaviour.
        **/
       return (trap in handler) ? function () {
-        return calltrap(handler[trap], noophandler[trap], Array.slice(arguments)) // TODO, test
+        return calltrap(handler[trap], noophandler[trap], Array.from(arguments)) // TODO, test
       } : noophandler[trap];
 
     }
@@ -545,6 +593,19 @@ var Observer = Observer || (function() {
   //| '_/ -_)  _| || | '_| ' \ 
   //|_| \___|\__|\_,_|_| |_||_|
 
+  /*
+  return (function() {
+    // create new global Observer proxy
+    var Observer = mkObserver(TransparentProxy.createRealm());
+    
+    // override transparent proxy constructor with Observer
+    TransparentProxy = Observer;
+
+    // return Observer
+    return Observer; 
+  })();*/
+
+  // XXX
   return mkObserver(TransparentProxy.createRealm());
 
 })();

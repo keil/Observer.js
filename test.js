@@ -64,7 +64,7 @@ function wrap(target) {
       /**
        * Continue observation
        **/
-      callback(function(result, ret) {
+      callback(target, name, handler, function(result, callback) {
 
       /**
        * Checks if the value field is of type number.
@@ -73,9 +73,9 @@ function wrap(target) {
       if(name === 'value' && (typeof result) !== 'number')
         throw new Error(`Property ${name} is not a number.`);
 
-      ret(wrap(result));
+      callback(wrap(result));
       
-      }, target, name, handler);
+      });
     }
   }
 
