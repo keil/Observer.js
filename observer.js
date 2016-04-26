@@ -341,7 +341,7 @@ var Observer = Observer || (function() {
      * Trap return.
      * (Default return is undefined.)
      **/
-    var result = undefined;
+    var trap_return = undefined;
 
     // TODO
     trap.call(this, ...argumentsList, function(continuation, ...argumentsList) {
@@ -365,7 +365,9 @@ var Observer = Observer || (function() {
 
 
       continuation.call(this, result, function(result) {
-        result = result;
+        /* XXX */ // print("@return");
+
+        trap_return = result;
       });
     });
 
@@ -373,7 +375,7 @@ var Observer = Observer || (function() {
     /**
      *
      **/
-    return result;
+    return trap_return;
 
   }
 
