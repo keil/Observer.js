@@ -40,7 +40,7 @@ function depthOf (node) {
 /**
  * Simple tree consisting of two nodes and three leafs.
  **/
-var target = Node(4, Node(1, Node(1), Node(2)), Node('3'));
+var target = Node(0, Node(1, Node(2), Node(3)), Node('3'));
 
 
 /**
@@ -58,7 +58,7 @@ function wrap(target) {
        * Checks for non existing properties.
        * (Pre-operation check)
        **/
-      if(!target[name])
+      if(target[name] === undefined)
         throw new Error(`Access to undefined proeprty ${name}.`);
 
       /**
