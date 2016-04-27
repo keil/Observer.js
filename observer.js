@@ -432,7 +432,7 @@ var Observer = Observer || (function() {
     /**
      *
      **/
-    return wrap(trap_return);
+    return trap_return;
 
   }
 
@@ -449,7 +449,7 @@ var Observer = Observer || (function() {
      * A trap for getting property values.
      * (Meta-Handler only recognizes get calls for traps.)
      **/ 
-    this.get = function(noophandler, trapname, receiver) {
+    this.get = function(default_handler, trapname, receiver) {
 
       print("@ request trap", trapname);
 
@@ -462,7 +462,7 @@ var Observer = Observer || (function() {
        **/
       return (trapname in handler) ? function () {
         return calltrap(handler[trapname], noophandler[trapname], Array.from(arguments))
-      } : noophandler[trapname];
+      } : default_handler[trapname];
 
     }
   }
