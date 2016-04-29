@@ -78,7 +78,7 @@ var Observer = Observer || (function() {
 
   function MembraneError(trap="(unnamed)", message) {
     this.name = 'Membrane Error';
-    this.message = `Pure trap-function ${trap} cannot cause observable effects.` + + (message? '\n'+message: '');;
+    this.message = `Pure trap-function ${trap} cannot cause observable effects.` + + (message? '\n'+message: '');
     this.stack = (new Error()).stack;
   }
   MembraneError.prototype = Object.create(Error.prototype);
@@ -522,6 +522,8 @@ var Observer = Observer || (function() {
     /// _| '_/ -_) _` |  _/ -_)   / -_) _` | | '  \ 
     //\__|_| \___\__,_|\__\___|_|_\___\__,_|_|_|_|_|
 
+    // TODO, error, shpudl be Observer only
+    // also, ity shudl not be a getter
     Object.defineProperty(Observer.prototype, "createRealm", {
       get: function() {
 
