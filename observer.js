@@ -35,13 +35,11 @@ var Observer = Observer || (function() {
       /**
        * if target is already wrapped in an proxy
        **/
-      print("================>", "targets has ", target);
       return targets.get(target);
     } else if(proxies.has(target)) {
       /**
        * if target is already an proxy
        **/
-      print("================>", "proxies has ", target);
       return target;
     }
 
@@ -63,7 +61,6 @@ var Observer = Observer || (function() {
    * sandbox_wrap: proxy -> target
    **/
   function sandbox_unwrap(proxy) {
-
     if(proxies.has(proxy)) {
       return proxies.get(proxy);
     } else {
@@ -193,12 +190,7 @@ var Observer = Observer || (function() {
      * A trap for a function call.
      **/
     this.apply = function(target, thisArg, argumentsList) {
-      if(target instanceof Pure) {
-        return target.apply(sandbox_wrap(thisArg), sandbox_wrap(argumentsList));
-      } else {
-        return target.apply(thisArg, argumentsList); // TODO
-        //throw new MembraneError('apply');
-      }
+      throw new MembraneError('apply');
     };
 
     /** 
@@ -228,8 +220,8 @@ var Observer = Observer || (function() {
   //|___/\___|_| \__,_|\_,_|_|\__|
 
 
-  function NoOpHandler() {
-    if(!(this instanceof NoOpHandler)) return new NoOpHandler();
+  function DefaultHandler() {
+    if(!(this instanceof DefaultHandler)) return new DefaultHandler();
 
     /**
      * A trap for Object.getPrototypeOf.
@@ -284,7 +276,6 @@ var Observer = Observer || (function() {
      * A trap for getting property values.
      **/
     this.get = function(target, name, receiver) {
-      print("*** acccess proeprty ", name); // TODO
       return (target[name]);
 
     };
@@ -372,8 +363,11 @@ var Observer = Observer || (function() {
      **/
     var trap_return = undefined;
 
-    // TODO. this pointer
-    trap.call(sandbox_wrap({}), ...sandbox_wrap(argumentsList), function(...args) {
+    // TODO
+    // this pointer
+    print("@this", this);
+
+    trap.call(sandbox_wrap(this), ...sandbox_wrap(argumentsList), function(...args) {
 
       /**
        * Extract continuation.
@@ -414,7 +408,7 @@ var Observer = Observer || (function() {
          * Unwrap the user's return value.
          **/
         var user_return = sandbox_unwrap(result);
-
+        
         /**
          * Checks if the user return is identical to the default return.
          * (This only works with transparent proxies.)
@@ -428,9 +422,9 @@ var Observer = Observer || (function() {
       });
     });
 
-
     /**
-     *
+     * Return result.
+     * Either de retrun of the default trap or a value equal to the default return.
      **/
     return trap_return;
 
@@ -449,10 +443,7 @@ var Observer = Observer || (function() {
      * A trap for getting property values.
      * (Meta-Handler only recognizes get calls for traps.)
      **/ 
-    this.get = function(default_handler, trapname, receiver) {
-
-      print("@ request trap", trapname);
-
+    this.get = function(defaulthandler, trapname, receiver) {
       /** 
        * If the user-defined handler contains a trap-function for operation <trap>,
        * then the meta-handler returns a mediator function to catch the trap's arguments 
@@ -461,8 +452,8 @@ var Observer = Observer || (function() {
        * Otherwise, the meta-handler returns the default behaviour.
        **/
       return (trapname in handler) ? function () {
-        return calltrap(handler[trapname], noophandler[trapname], Array.from(arguments))
-      } : default_handler[trapname];
+        return calltrap(handler[trapname], defaulthandler[trapname], Array.from(arguments))
+      } : defaulthandler[trapname];
 
     }
   }
@@ -485,30 +476,15 @@ var Observer = Observer || (function() {
     function Observer(target, handler, keep=true) {
       if(!(this instanceof Observer)) return new Observer(target, handler, keep);
 
-      print("***", "create observer for", target);
-
       if(proxies.has(target)) {
-        print("***", "observe sandboxed target", target);
-
-        print("cache has");
         return sandbox_wrap(new Observer(proxies.get(target), handler, keep));
       }
 
       // Proxy Constructor
-      var Proxy = realm.Proxy;
+      // var Proxy = realm.Proxy; TODO, activate this if transparent proxies are avaluable
 
       // create new observer based on the given  handler
-      var proxy = new Proxy(target, new Proxy(new NoOpHandler(), new ObserverHandler(handler)));
-
-      /*var proxy = new Proxy(target, new Proxy(new NoOpHandler(), {
-        get: function(target, name) {
-          print("access trap", name);
-          return target[name];
-        }
-      }));*/
-
-      print(proxy);
-
+      var proxy = new Proxy(target, new Proxy(new DefaultHandler(), new ObserverHandler(handler)));
 
       // remembers existing observers
       if(keep) observers.add(proxy);
@@ -522,10 +498,8 @@ var Observer = Observer || (function() {
     /// _| '_/ -_) _` |  _/ -_)   / -_) _` | | '  \ 
     //\__|_| \___\__,_|\__\___|_|_\___\__,_|_|_|_|_|
 
-    // TODO, error, shpudl be Observer only
-    // also, ity shudl not be a getter
-    Object.defineProperty(Observer.prototype, "createRealm", {
-      get: function() {
+    Object.defineProperty(Observer, "createRealm", {
+      value: function() {
 
         // create a new indetitity realm
         var realm = TransparentProxy.createRealm();

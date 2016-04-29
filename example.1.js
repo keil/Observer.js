@@ -89,31 +89,3 @@ function wrap(target) {
 }
 
 var proxy = wrap(target);
-
-//proxy.left.value = 4711;
-
-//print(proxy.value);
-
-
-//print(proxy.left);
-//print(proxy.left.value);
-//print(proxy.left.left.value);
-//print(proxy.left.right.value);
-
-//print(proxy.right.value);
-
-//print(proxy.xxx);
-
-var p = proxy.right;
-p.adsfasdf= afafr;
-
-print("xxx" in p);
-print(Observer.isObserver(p));
-//print("is observer:", Observer.isObserver(proxy.right));
-//print(proxy.right.xxx);
-
-//print(proxy.right.xxx);
-
-
-//print(proxy.right.left);
-//print(proxy.right.right.value);
