@@ -68,17 +68,16 @@ function wrap(target) {
       callback(target, name, receiver, function(result, callback) {
 
         /**
-         * Checks if the value field is of type number.
+         * Checks if the 'value' field is of type number.
          * (Post-operation check)
          **/
         if(name === 'value' && (typeof result) !== 'number') throw new Error(`Property ${name} is not a number.`);
 
-        var proxy = wrap(result);
-
-        //print(proxy)
-        //callback(result);
-        callback(wrap(result));
-
+        /**
+         * Implements a Membrane.
+         * (Post-operation check)
+         **/
+        //callback(wrap(result));
 
       });
     }
@@ -91,35 +90,13 @@ try {
 
   var proxy = wrap(target);
 
-  //proxy.left.value = 4711;
+  print(proxy.left === target.left);
 
-  //print(proxy.value);
-
-  //print(proxy.left);
+  print(proxy.value);
   print(proxy.left.value);
   print(proxy.left.left.value);
   print(proxy.left.right.value);
 
-  //print(proxy.right.value);
-
-  //print(proxy.xxx);
-
-  //var p = proxy.right;
-  //p.adsfasdf= afafr;
-
-  //print("xxx" in p);
-  //print(Observer.isObserver(p));
-  //print("is observer:", Observer.isObserver(proxy.right));
-  //print(proxy.right.xxx);
-
-  //print(proxy.right.xxx);
-
-  //print(proxy.right.left);
-  //print(proxy.right.right.value);
-
-
 } catch(e) {
   print(e, e.stack);
-
 }
-
