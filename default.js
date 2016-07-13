@@ -13,11 +13,10 @@
  * http://www.informatik.uni-freiburg.de/~keilr/
  **/
 
-
-
 /**
  * Implementation of a tree in JavaScipt.
  **/
+
 function Node (value, left, right) {
   if(!(this instanceof Node)) return new Node (value, left, right);
 
@@ -25,6 +24,7 @@ function Node (value, left, right) {
   this.left = left;
   this.right = right;
 }
+
 Node.prototype.toString = function () {
   return "[" + (this.left?this.left + ", ":"") + this.value +(this.right?", "+this.right:"") + "]";
 }
@@ -40,12 +40,13 @@ function depthOf (node) {
 /**
  * Simple tree consisting of two nodes and three leafs.
  **/
-var target = Node(0, Node(1, Node(2), Node(3)), Node('3'));
 
+var target = Node(0, Node(1, Node(2), Node(3)), Node('3'));
 
 /**
  * Simple contract wrapper.
  **/
+
 function wrap(target) {
 
   if(target !== Object(target)) 

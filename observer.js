@@ -363,10 +363,6 @@ var Observer = Observer || (function() {
      **/
     var trap_return = undefined;
 
-    // TODO
-    // this pointer
-    print("@this", this);
-
     trap.call(sandbox_wrap(this), ...sandbox_wrap(argumentsList), function(...args) {
 
       /**
@@ -390,8 +386,8 @@ var Observer = Observer || (function() {
          * The user-defined trap needs to return an values identical to the 
          * default values, i.e. either the same value or an observer of that value.
          **/
-         if(arg === argumentsList[i]) argumentsList[i] = arg;
-         else throw new ObserverError("Argument values must be equal to the default arguments.");
+        if(arg === argumentsList[i]) argumentsList[i] = arg;
+        else throw new ObserverError("Argument values must be equal to the default arguments.");
       }
 
       /**
@@ -408,7 +404,7 @@ var Observer = Observer || (function() {
          * Unwrap the user's return value.
          **/
         var user_return = sandbox_unwrap(result);
-        
+
         /**
          * Checks if the user return is identical to the default return.
          * (This only works with transparent proxies.)
@@ -481,7 +477,7 @@ var Observer = Observer || (function() {
       }
 
       // Proxy Constructor
-      // var Proxy = realm.Proxy; TODO, activate this if transparent proxies are avaluable
+      var Proxy = realm.Proxy;
 
       // create new observer based on the given  handler
       var proxy = new Proxy(target, new Proxy(new DefaultHandler(), new ObserverHandler(handler)));
@@ -552,7 +548,7 @@ var Observer = Observer || (function() {
     // \_/\___|_| /__/_\___/_||_|
 
     Object.defineProperty(Observer, "version", {
-      value: "Observer 0.1.1 (PoC)"
+      value: "Observer 0.2.0 (PoC)"
     });
 
     Object.defineProperty(Observer.prototype, "version", {
@@ -583,19 +579,6 @@ var Observer = Observer || (function() {
   //| '_/ -_)  _| || | '_| ' \ 
   //|_| \___|\__|\_,_|_| |_||_|
 
-  /*
-     return (function() {
-  // create new global Observer proxy
-  var Observer = mkObserver(TransparentProxy.createRealm());
-
-  // override transparent proxy constructor with Observer
-  TransparentProxy = Observer;
-
-  // return Observer
-  return Observer; 
-  })();*/
-
-  // XXX
   return mkObserver(TransparentProxy.createRealm());
 
 })();
